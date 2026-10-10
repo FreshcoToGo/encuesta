@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fresh Co — ¿Cómo te fue?</title>
+<style>
+  :root {
+    --fondo: #ffffff; --tarjeta: #ffffff; --tinta: #1f2a24; --suave: #6b7069;
+    --verde: #1e7855; --verde-claro: #e2f0e9; --rojo: #ec3e35; --amarillo: #f7b30a; --borde: #e7e5e1;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--fondo); color: var(--tinta);
+    font: 17px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; padding: 16px 16px 32px; display: flex; flex-direction: column; }
+  header { position: relative; display: flex; justify-content: center; padding-top: 8px; margin-bottom: 16px; }
+  header .idioma { position: absolute; right: 0; top: 0; }
+  .logo { display: block; height: 108px; width: auto; }
+  .idioma { border: 1px solid var(--borde); background: var(--tarjeta); border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; color: var(--tinta); }
+  .barra { height: 6px; background: var(--borde); border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
+  .barra i { display: block; height: 100%; width: 0; background: var(--verde); transition: width .35s ease; }
+  .paso { display: none; flex: 1; flex-direction: column; animation: entra .3s ease; }
+  .paso.activo { display: flex; }
+  @keyframes entra { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  h1 { font-size: 26px; line-height: 1.2; margin: 8px 0 6px; }
+  .sub { color: var(--suave); margin: 0 0 20px; }
+  .caras { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .cara { aspect-ratio: 1; border: 2px solid var(--borde); background: var(--tarjeta); border-radius: 16px; font-size: 34px; cursor: pointer; transition: transform .12s; }
+  .cara:active, .op:active, .nps button:active { transform: scale(.94); }
+  .cara.sel { border-color: var(--verde); background: var(--verde-claro); }
+  .etiquetas { display: flex; justify-content: space-between; font-size: 13px; color: var(--suave); margin-top: 6px; }
+  .bloque + .bloque, .etiquetas + .bloque { margin-top: 28px; }
+  .bloque h2 { font-size: 18px; margin: 0 0 10px; }
+  .ops { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ops.una { grid-template-columns: 1fr; }
+  .op { border: 2px solid var(--borde); background: var(--tarjeta); border-radius: 14px; padding: 14px 12px; font: inherit; color: var(--tinta); text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; min-height: 56px; }
+  .op .ico { font-size: 24px; }
+  .op.sel { border-color: var(--verde); background: var(--verde-claro); font-weight: 600; }
+  .nps { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; }
+  .nps button { aspect-ratio: .8; border: 2px solid var(--borde); background: var(--tarjeta); border-radius: 10px; font: inherit; font-weight: 600; font-size: 15px; color: var(--tinta); padding: 0; cursor: pointer; }
+  .nps button.sel { background: var(--verde); border-color: var(--verde); color: #fff; }
+  select, input, textarea { width: 100%; font: inherit; color: var(--tinta); background: var(--tarjeta); border: 2px solid var(--borde); border-radius: 14px; padding: 14px; }
+  textarea { min-height: 84px; resize: vertical; }
+  select:focus, input:focus, textarea:focus { outline: none; border-color: var(--verde); }
+  .acciones { margin-top: auto; padding-top: 24px; display: flex; gap: 10px; }
+  .btn { flex: 1; border: 0; border-radius: 14px; padding: 16px; font: inherit; font-weight: 700; cursor: pointer; }
+  .btn.prim { background: var(--verde); color: #fff; }
+  .btn.prim:disabled { opacity: .35; }
+  .btn.sec { background: transparent; color: var(--suave); flex: 0 0 auto; }
+  .gracias { text-align: center; justify-content: center; }
+  .gracias .big { font-size: 72px; }
+  .error { color: var(--rojo); font-size: 14px; margin-top: 8px; min-height: 1em; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <img class="logo" src="logo.png" alt="Freshco To Go Kitchen">
+    <button class="idioma" id="idioma" type="button">English</button>
+  </header>
+  <div class="barra"><i id="progreso"></i></div>
+
+  <!-- 1. Calificaciones -->
+  <section class="paso activo" data-paso="0">
+    <h1 data-t="t_hola"></h1>
+    <p class="sub" data-t="t_hola_sub"></p>
+    <div class="bloque">
+      <h2 data-t="t_comida"></h2>
+      <div class="caras" data-campo="comida"></div>
+      <div class="etiquetas"><span data-t="t_mal"></span><span data-t="t_excelente"></span></div>
+    </div>
+    <div class="bloque">
+      <h2 data-t="t_servicio"></h2>
+      <div class="caras" data-campo="servicio"></div>
+      <div class="etiquetas"><span data-t="t_mal"></span><span data-t="t_excelente"></span></div>
+    </div>
+    <div class="acciones"><button class="btn prim" data-sig data-requiere="comida,servicio" data-t="t_siguiente"></button></div>
+  </section>
+
+  <!-- 2. Favorito -->
+  <section class="paso" data-paso="1">
+    <h1 data-t="t_favorito"></h1>
+    <p class="sub" data-t="t_favorito_sub"></p>
+    <div class="ops" data-campo="categoria" data-auto></div>
+    <div class="acciones"><button class="btn sec" data-ant data-t="t_atras"></button></div>
+  </section>
+
+  <!-- 3. Cómo nos conoció / frecuencia -->
+  <section class="paso" data-paso="2">
+    <h1 data-t="t_frecuencia"></h1>
+    <div class="ops una" data-campo="frecuencia"></div>
+    <div class="bloque">
+      <h2 data-t="t_como"></h2>
+      <div class="ops" data-campo="como"></div>
+    </div>
+    <div class="acciones"><button class="btn sec" data-ant data-t="t_atras"></button><button class="btn prim" data-sig data-requiere="frecuencia,como" data-t="t_siguiente"></button></div>
+  </section>
+
+  <!-- 4. NPS -->
+  <section class="paso" data-paso="3">
+    <h1 data-t="t_nps"></h1>
+    <p class="sub" data-t="t_nps_sub"></p>
+    <div class="nps" data-campo="nps"></div>
+    <div class="etiquetas"><span data-t="t_nada"></span><span data-t="t_seguro"></span></div>
+    <div class="bloque">
+      <h2 data-t="t_guisado"></h2>
+      <div class="ops" data-campo="guisado"></div>
+    </div>
+    <div class="acciones"><button class="btn sec" data-ant data-t="t_atras"></button><button class="btn prim" data-sig data-requiere="nps" data-t="t_siguiente"></button></div>
+  </section>
+
+  <!-- 5. Opcionales -->
+  <section class="paso" data-paso="4">
+    <h1 data-t="t_ultimo"></h1>
+    <div class="bloque">
+      <h2 data-t="t_sugerencia"></h2>
+      <textarea id="sugerencia" maxlength="300" data-ph="t_sugerencia_ph"></textarea>
+    </div>
+    <div class="bloque">
+      <h2 data-t="t_zona"></h2>
+      <select id="cp"></select>
+    </div>
+    <div class="bloque">
+      <h2 data-t="t_tel"></h2>
+      <input id="telefono" type="tel" inputmode="numeric" autocomplete="tel" maxlength="14" data-ph="t_tel_ph">
+    </div>
+    <div class="error" id="error"></div>
+    <div class="acciones"><button class="btn sec" data-ant data-t="t_atras"></button><button class="btn prim" id="enviar" data-t="t_enviar"></button></div>
+  </section>
+
+  <!-- 6. Gracias -->
+  <section class="paso gracias" data-paso="5">
+    <img class="logo" id="logo-gracias" alt="Freshco To Go Kitchen" style="height:120px;margin:0 auto 12px">
+    <h1 data-t="t_gracias"></h1>
+    <p class="sub" data-t="t_gracias_sub"></p>
+  </section>
+</div>
+
+<script>
+window.ENDPOINT = 'https://script.google.com/macros/s/AKfycbybZz52ML92tG69wuwI1dOsII6qOWmjHs-WCH_c1LupYfFxorTY83Hy9pvRI6TxarVifg/exec';
+const T = {
+  es: {
+    t_hola: '¿Cómo te fue hoy?', t_hola_sub: 'Son 30 segundos y nos ayudan muchísimo.',
+    t_comida: 'La comida', t_servicio: 'El servicio', t_mal: 'Mal', t_excelente: 'Excelente',
+    t_siguiente: 'Siguiente', t_atras: 'Atrás',
+    t_favorito: '¿Cuál es tu favorito?', t_favorito_sub: 'Toca uno.',
+    t_frecuencia: '¿Cada cuánto vienes?', t_como: '¿Cómo nos conociste?',
+    t_nps: '¿Nos recomendarías con un amigo?', t_nps_sub: 'Del 0 al 10.',
+    t_nada: 'Para nada', t_seguro: 'Seguro que sí',
+    t_guisado: '¿Comprarías nuestros guisados por litro para llevar?',
+    t_ultimo: 'Ya casi. Esto es opcional:', t_sugerencia: '¿Qué te gustaría que agregáramos al menú?',
+    t_sugerencia_ph: 'Tacos, aguas, promociones…', t_zona: '¿De qué zona nos visitas?',
+    t_tel: 'Tu teléfono (opcional)',
+    t_tel_ph: '915 555 1234', t_enviar: 'Enviar',
+    t_gracias: '¡Gracias!', t_gracias_sub: 'Tu opinión ya llegó a la cocina. Te esperamos pronto.',
+    t_error: 'No se pudo enviar. Revisa tu conexión e inténtalo otra vez.',
+    t_tel_mal: 'El teléfono debe tener 10 dígitos (o déjalo vacío).',
+    zona_vacia: 'Prefiero no decir', zona_otra: 'Otra zona',
+  },
+  en: {
+    t_hola: 'How was your visit today?', t_hola_sub: 'It takes 30 seconds and helps us a lot.',
+    t_comida: 'The food', t_servicio: 'The service', t_mal: 'Bad', t_excelente: 'Excellent',
+    t_siguiente: 'Next', t_atras: 'Back',
+    t_favorito: 'What is your favorite?', t_favorito_sub: 'Tap one.',
+    t_frecuencia: 'How often do you visit?', t_como: 'How did you hear about us?',
+    t_nps: 'Would you recommend us to a friend?', t_nps_sub: 'From 0 to 10.',
+    t_nada: 'Not at all', t_seguro: 'Definitely',
+    t_guisado: 'Would you buy our stews by the liter to go?',
+    t_ultimo: 'Almost done. This part is optional:', t_sugerencia: 'What would you like us to add to the menu?',
+    t_sugerencia_ph: 'Tacos, aguas frescas, promos…', t_zona: 'Which area are you visiting from?',
+    t_tel: 'Your phone number (optional)',
+    t_tel_ph: '915 555 1234', t_enviar: 'Send',
+    t_gracias: 'Thank you!', t_gracias_sub: 'Your feedback is already in the kitchen. See you soon.',
+    t_error: 'Could not send. Check your connection and try again.',
+    t_tel_mal: 'Phone number must have 10 digits (or leave it empty).',
+    zona_vacia: 'Prefer not to say', zona_otra: 'Other area',
+  },
+};
+
+// valor = el texto que se guarda en la hoja (siempre en español, para que el
+// Resumen lo cuente igual sin importar el idioma del cliente).
+const OPCIONES = {
+  categoria: [
+    ['Burritos', '🌯', 'Burritos', 'Burritos'],
+    ['Chilaquiles', '🥘', 'Chilaquiles', 'Chilaquiles'],
+    ['Menudo', '🍲', 'Menudo', 'Menudo'],
+    ['Barbacoa', '🥩', 'Barbacoa', 'Barbacoa'],
+    ['Chicharrón', '🐖', 'Chicharrón', 'Chicharrón'],
+    ['Torta milanesa', '🥪', 'Torta de milanesa', 'Milanesa torta'],
+    ['Desayunos con huevo', '🍳', 'Huevo con chorizo, machaca…', 'Egg breakfasts'],
+    ['Quesadillas', '🧀', 'Quesadillas', 'Quesadillas'],
+    ['Otro', '✨', 'Otro', 'Something else'],
+  ],
+  frecuencia: [
+    ['Primera vez', '👋', 'Es mi primera vez', 'This is my first time'],
+    ['Cada semana', '📅', 'Cada semana', 'Weekly'],
+    ['Cada mes', '🗓️', 'Cada mes', 'Monthly'],
+    ['Diario', '⭐', 'Casi diario', 'Almost daily'],
+    ['Cada año o menos', '🕰️', 'De vez en cuando', 'Once in a while'],
+  ],
+  como: [
+    ['Recomendación', '🗣️', 'Me lo recomendaron', 'Someone told me'],
+    ['Espectacular', '🪧', 'Espectacular', 'Billboard'],
+    ['Redes sociales', '📱', 'Redes sociales', 'Social media'],
+    ['Pasaba por aquí', '🚗', 'Pasaba por aquí', 'Drove by'],
+    ['Folleto', '📄', 'Folleto', 'Flyer'],
+  ],
+  guisado: [['Sí', '👍', 'Sí', 'Yes'], ['No', '👎', 'No', 'No']],
+};
+
+// Zonas: las que salieron en la encuesta de 2025, primero las más frecuentes.
+const ZONAS = ['79932', '79912', '79911', '79835', '79922', '79928', '79901', '79902', '79935', '79930', '79923', '79921', '88063'];
+// Cuatro caritas (se quitó la 🙁). Se guardan en la escala 1-5 de la hoja para
+// que el promedio siga leyéndose "de 5": mal=1, regular=3, bien=4, excelente=5.
+const CARAS = [['😞', 1], ['😐', 3], ['🙂', 4], ['😍', 5]];
+
+let lang = (navigator.language || 'es').toLowerCase().startsWith('es') ? 'es' : 'en';
+let paso = 0;
+const resp = {};
+const TOTAL_PASOS = 5;
+
+function pintarTextos() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = T[lang][el.dataset.t]; });
+  document.querySelectorAll('[data-ph]').forEach(el => { el.placeholder = T[lang][el.dataset.ph]; });
+  document.getElementById('idioma').textContent = lang === 'es' ? 'English' : 'Español';
+  document.querySelectorAll('.ops[data-campo]').forEach(cont => {
+    cont.querySelectorAll('.op').forEach((b, i) => {
+      const o = OPCIONES[cont.dataset.campo][i];
+      b.querySelector('.txt').textContent = lang === 'es' ? o[2] : o[3];
+    });
+  });
+  const sel = document.getElementById('cp');
+  const actual = sel.value;
+  sel.innerHTML = '';
+  [['', T[lang].zona_vacia]].concat(ZONAS.map(z => [z, z]), [['otra', T[lang].zona_otra]]).forEach(([v, t]) => {
+    const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o);
+  });
+  sel.value = actual;
+}
+
+function marcar(cont, boton) {
+  cont.querySelectorAll('.sel').forEach(b => b.classList.remove('sel'));
+  boton.classList.add('sel');
+  revisarBotones();
+}
+
+function construir() {
+  document.querySelectorAll('.caras').forEach(cont => {
+    CARAS.forEach(([c, valor]) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'cara'; b.textContent = c;
+      b.setAttribute('aria-label', String(valor));
+      b.onclick = () => { resp[cont.dataset.campo] = valor; marcar(cont, b); };
+      cont.appendChild(b);
+    });
+  });
+  const nps = document.querySelector('.nps');
+  for (let i = 0; i <= 10; i++) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = i;
+    b.onclick = () => { resp.nps = i; marcar(nps, b); };
+    nps.appendChild(b);
+  }
+  document.querySelectorAll('.ops[data-campo]').forEach(cont => {
+    OPCIONES[cont.dataset.campo].forEach(o => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'op';
+      b.innerHTML = '<span class="ico"></span><span class="txt"></span>';
+      b.querySelector('.ico').textContent = o[1];
+      b.onclick = () => {
+        resp[cont.dataset.campo] = o[0];
+        marcar(cont, b);
+        if (cont.hasAttribute('data-auto')) setTimeout(() => ir(paso + 1), 250);
+      };
+      cont.appendChild(b);
+    });
+  });
+  document.querySelectorAll('[data-sig]').forEach(b => { b.onclick = () => ir(paso + 1); });
+  document.querySelectorAll('[data-ant]').forEach(b => { b.onclick = () => ir(paso - 1); });
+  document.getElementById('idioma').onclick = () => { lang = lang === 'es' ? 'en' : 'es'; pintarTextos(); };
+  document.getElementById('enviar').onclick = enviar;
+}
+
+function revisarBotones() {
+  document.querySelectorAll('[data-requiere]').forEach(b => {
+    b.disabled = !b.dataset.requiere.split(',').every(c => resp[c] !== undefined);
+  });
+}
+
+function ir(n) {
+  paso = Math.max(0, Math.min(n, TOTAL_PASOS));
+  document.querySelectorAll('.paso').forEach(s => s.classList.toggle('activo', Number(s.dataset.paso) === paso));
+  document.getElementById('progreso').style.width = (paso / TOTAL_PASOS * 100) + '%';
+  window.scrollTo(0, 0);
+}
+
+function enviar() {
+  const err = document.getElementById('error');
+  const tel = document.getElementById('telefono').value.replace(/\D/g, '');
+  if (tel && tel.length !== 10) { err.textContent = T[lang].t_tel_mal; return; }
+  err.textContent = '';
+  const cp = document.getElementById('cp').value;
+  const datos = Object.assign({}, resp, {
+    idioma: lang === 'es' ? 'Español' : 'Inglés',
+    sugerencia: document.getElementById('sugerencia').value,
+    cp: cp === 'otra' ? '' : cp,
+    telefono: tel,
+  });
+  const btn = document.getElementById('enviar');
+  btn.disabled = true;
+  const fallo = () => { btn.disabled = false; err.textContent = T[lang].t_error; };
+  if (window.ENDPOINT) {
+    // Versión publicada fuera de Google (GitHub Pages): manda a doPost.
+    // text/plain evita la consulta previa de CORS, y credentials:'omit' no manda las
+    // cookies de Google, que es lo que rompía Apps Script con varias cuentas abiertas.
+    fetch(window.ENDPOINT, {
+      method: 'POST', credentials: 'omit', redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(datos),
+    })
+      .then(r => r.json())
+      .then(j => (j && j.ok ? ir(TOTAL_PASOS) : fallo()))
+      .catch(fallo);
+    return;
+  }
+  google.script.run
+    .withSuccessHandler(() => ir(TOTAL_PASOS))
+    .withFailureHandler(fallo)
+    .guardarRespuesta(datos);
+}
+
+// Fuera de Apps Script (para probar la página en local) no existe google.script.
+if (typeof google === 'undefined') {
+  window.google = { script: { run: {
+    withSuccessHandler(ok) { this._ok = ok; return this; },
+    withFailureHandler(f) { return this; },
+    guardarRespuesta(d) { console.log('guardarRespuesta', d); setTimeout(this._ok, 400); },
+  } } };
+}
+
+// El logo va una sola vez en el HTML (en base64 pesa); la pantalla de gracias lo copia.
+document.getElementById('logo-gracias').src = document.querySelector('header .logo').src;
+construir();
+pintarTextos();
+revisarBotones();
+</script>
+</body>
+</html>
