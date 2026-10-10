@@ -49,6 +49,7 @@
   .btn.sec { background: transparent; color: var(--suave); flex: 0 0 auto; }
   .gracias { text-align: center; justify-content: center; }
   .gracias .big { font-size: 72px; }
+  .trampa { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
   .error { color: var(--rojo); font-size: 14px; margin-top: 8px; min-height: 1em; }
 </style>
 </head>
@@ -124,6 +125,7 @@
       <h2 data-t="t_tel"></h2>
       <input id="telefono" type="tel" inputmode="numeric" autocomplete="tel" maxlength="14" data-ph="t_tel_ph">
     </div>
+    <div class="trampa" aria-hidden="true"><label>Sitio web <input id="sitio_web" tabindex="-1" autocomplete="off"></label></div>
     <div class="error" id="error"></div>
     <div class="acciones"><button class="btn sec" data-ant data-t="t_atras"></button><button class="btn prim" id="enviar" data-t="t_enviar"></button></div>
   </section>
@@ -155,6 +157,8 @@ const T = {
     t_gracias: '¡Gracias!', t_gracias_sub: 'Tu opinión ya llegó a la cocina. Te esperamos pronto.',
     t_error: 'No se pudo enviar. Revisa tu conexión e inténtalo otra vez.',
     t_tel_mal: 'El teléfono debe tener 10 dígitos (o déjalo vacío).',
+    t_reciente: 'Ya recibimos una respuesta desde este teléfono hace unos minutos. ¡Gracias!',
+    t_saturado: 'Estamos recibiendo muchas respuestas. Inténtalo en unos minutos, por favor.',
     zona_vacia: 'Prefiero no decir', zona_otra: 'Otra zona',
   },
   en: {
@@ -173,6 +177,8 @@ const T = {
     t_gracias: 'Thank you!', t_gracias_sub: 'Your feedback is already in the kitchen. See you soon.',
     t_error: 'Could not send. Check your connection and try again.',
     t_tel_mal: 'Phone number must have 10 digits (or leave it empty).',
+    t_reciente: 'We already got a response from this phone a few minutes ago. Thank you!',
+    t_saturado: 'We are getting a lot of responses. Please try again in a few minutes.',
     zona_vacia: 'Prefer not to say', zona_otra: 'Other area',
   },
 };
@@ -213,6 +219,17 @@ const ZONAS = ['79932', '79912', '79911', '79835', '79922', '79928', '79901', '7
 // Cuatro caritas (se quitó la 🙁). Se guardan en la escala 1-5 de la hoja para
 // que el promedio siga leyéndose "de 5": mal=1, regular=3, bien=4, excelente=5.
 const CARAS = [['😞', 1], ['😐', 3], ['🙂', 4], ['😍', 5]];
+
+const INICIO = Date.now();
+// Identificador anónimo del dispositivo, solo para frenar respuestas repetidas.
+function idDispositivo() {
+  const nuevo = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  try {
+    let id = localStorage.getItem('freshco_disp');
+    if (!id) { id = nuevo(); localStorage.setItem('freshco_disp', id); }
+    return id;
+  } catch (e) { return nuevo(); }
+}
 
 let lang = (navigator.language || 'es').toLowerCase().startsWith('es') ? 'es' : 'en';
 let paso = 0;
@@ -306,10 +323,18 @@ function enviar() {
     sugerencia: document.getElementById('sugerencia').value,
     cp: cp === 'otra' ? '' : cp,
     telefono: tel,
+    sitio: document.getElementById('sitio_web').value,
+    ms: Date.now() - INICIO,
+    dispositivo: idDispositivo(),
   });
   const btn = document.getElementById('enviar');
   btn.disabled = true;
-  const fallo = () => { btn.disabled = false; err.textContent = T[lang].t_error; };
+  const fallo = motivo => {
+    const m = String((motivo && motivo.message) || motivo || '');
+    btn.disabled = false;
+    err.textContent = m.includes('reciente') ? T[lang].t_reciente
+      : m.includes('saturado') ? T[lang].t_saturado : T[lang].t_error;
+  };
   if (window.ENDPOINT) {
     // Versión publicada fuera de Google (GitHub Pages): manda a doPost.
     // text/plain evita la consulta previa de CORS, y credentials:'omit' no manda las
@@ -320,8 +345,8 @@ function enviar() {
       body: JSON.stringify(datos),
     })
       .then(r => r.json())
-      .then(j => (j && j.ok ? ir(TOTAL_PASOS) : fallo()))
-      .catch(fallo);
+      .then(j => (j && j.ok ? ir(TOTAL_PASOS) : fallo(j && j.error)))
+      .catch(() => fallo());
     return;
   }
   google.script.run
